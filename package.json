@@ -1,6 +1,6 @@
 {
   "name": "specrec-ts",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Turn untestable legacy code into comprehensive test suites in minutes - TypeScript implementation of SpecRec",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
