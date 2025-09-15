@@ -28,13 +28,13 @@
   ],
   "author": "Ivett Ordog",
   "license": "PolyForm-Noncommercial-1.0.0",
-  "homepage": "https://github.com/ivettordog/specrec-ts#readme",
+  "homepage": "https://github.com/devill/specrec-ts#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ivettordog/specrec-ts.git"
+    "url": "git+https://github.com/devill/specrec-ts.git"
   },
   "bugs": {
-    "url": "https://github.com/ivettordog/specrec-ts/issues"
+    "url": "https://github.com/devill/specrec-ts/issues"
   },
   "engines": {
     "node": ">=14.0.0"
