@@ -1,0 +1,29 @@
+# Source files
+src/
+tsconfig.json
+jest.config.js
+
+# Test files
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+coverage/
+
+# Development files
+node_modules/
+.idea/
+.vscode/
+*.log
+.DS_Store
+
+# Build artifacts (we want dist/ but not these)
+*.tsbuildinfo
+
+# Git files
+.git/
+.gitignore
+
+# Documentation that shouldn't be in the package
+docs/
+examples/
