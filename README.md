@@ -49,7 +49,82 @@ yarn add specrec-ts
 
 **Solution:** Replace `new` with `create()` to enable dependency injection without major refactoring.
 
-#### In Regular Tests
+#### Breaking Dependencies
+
+Transform hard dependencies into testable code:
+
+```typescript
+// Legacy code with hard dependency
+class UserService {
+  processUser(id: number) {
+    const repo = new SqlRepository("server=prod;...");
+    const user = repo.getUser(id);
+    // ...
+  }
+}
+
+// Testable code using ObjectFactory
+import { create } from 'specrec-ts';
+
+class UserService {
+  processUser(id: number) {
+    const repo = create(SqlRepository)("server=prod;...");
+    const user = repo.getUser(id);
+    // ...
+  }
+}
+```
+
+#### In Tests
+
+```typescript
+import { setOne, clearAll } from 'specrec-ts';
+
+describe('UserService', () => {
+  afterEach(() => {
+    clearAll();
+  });
+
+  it('should process user successfully', () => {
+    // Setup
+    const mockRepo = new MockSqlRepository();
+    mockRepo.users.set(123, { name: 'John', email: 'john@example.com' });
+
+    setOne(SqlRepository, mockRepo);
+
+    // Act
+    const service = new UserService();
+    const result = service.processUser(123);
+
+    // Assert
+    expect(result).toEqual({ name: 'John', email: 'john@example.com' });
+  });
+});
+```
+
+### Test Double Injection
+
+Use `setOne` for single-use mocks or `setAlways` for persistent test doubles:
+
+```typescript
+import { ObjectFactory, setOne, setAlways } from 'specrec-ts';
+
+// Single-use test double (consumed after first use)
+setOne(EmailService, mockEmailService);
+
+// Persistent test double (used for all calls)
+setAlways(DatabaseService, mockDatabaseService);
+
+// setOne takes priority over setAlways
+setAlways(MyService, alwaysService);
+setOne(MyService, onceService);
+const service1 = create(MyService)(); // Returns onceService
+const service2 = create(MyService)(); // Returns alwaysService
+```
+
+### Factory Instance Usage
+
+For more control, use ObjectFactory instances:
 
 ```typescript
 import { ObjectFactory } from 'specrec-ts';
@@ -80,207 +155,9 @@ describe('MyService', () => {
 });
 ```
 
-#### Breaking Dependencies
+### Global Singleton Pattern
 
-Transform hard dependencies into testable code:
-
-```typescript
-// Legacy code with hard dependency
-class UserService {
-  processUser(id: number) {
-    const repo = new SqlRepository("server=prod;...");
-    const user = repo.getUser(id);
-    // ...
-  }
-}
-
-// Testable code using ObjectFactory
-import { create } from 'specrec-ts';
-
-class UserService {
-  processUser(id: number) {
-    const repo = create(SqlRepository)("server=prod;...");
-    const user = repo.getUser(id);
-    // ...
-  }
-}
-```
-
-#### Curried Syntax Benefits
-
-The curried syntax `create(Class)(args)` provides a clean, functional approach:
-
-```typescript
-// Create a factory function for a specific class
-const createEmailService = create(EmailService);
-
-// Use it multiple times with different parameters
-const service1 = createEmailService("smtp1.example.com", 587);
-const service2 = createEmailService("smtp2.example.com", 465);
-
-// Type inference works perfectly
-const repo = create(UserRepository)("connection-string");
-// TypeScript knows repo is UserRepository
-```
-
-### Test Double Injection
-
-**Use Case:** You need to replace real services with test doubles during testing.
-
-**Solution:** Use `setOne` for single-use mocks or `setAlways` for persistent test doubles.
-
-#### Single-Use Test Doubles
-
-```typescript
-import { ObjectFactory } from 'specrec-ts';
-
-const factory = new ObjectFactory();
-
-// Queue a test double for single use
-const mockService = new MockEmailService();
-factory.setOne(EmailService, mockService);
-
-const service1 = factory.create(EmailService)(); // Returns mockService
-const service2 = factory.create(EmailService)(); // Creates new EmailService
-```
-
-#### Persistent Test Doubles
-
-```typescript
-// Set a persistent test double
-const mockDb = new MockDatabase();
-factory.setAlways(DatabaseService, mockDb);
-
-const db1 = factory.create(DatabaseService)(); // Returns mockDb
-const db2 = factory.create(DatabaseService)(); // Same mockDb instance
-const db3 = factory.create(DatabaseService)(); // Still mockDb
-```
-
-#### Priority: SetOne Over SetAlways
-
-```typescript
-const alwaysMock = new AlwaysMockService();
-const onceMock = new OnceMockService();
-
-factory.setAlways(MyService, alwaysMock);
-factory.setOne(MyService, onceMock);
-
-const service1 = factory.create(MyService)(); // Returns onceMock
-const service2 = factory.create(MyService)(); // Returns alwaysMock
-```
-
-### Duck Typing Advantage
-
-**Use Case:** You have interfaces and multiple implementations but don't want complex registration.
-
-**Solution:** TypeScript's structural typing automatically handles compatibility.
-
-```typescript
-interface IEmailService {
-  send(to: string, subject: string): void;
-}
-
-class EmailService implements IEmailService {
-  send(to: string, subject: string): void {
-    // Real implementation
-  }
-}
-
-class MockEmailService {
-  calls: Array<{to: string; subject: string}> = [];
-
-  send(to: string, subject: string): void {
-    this.calls.push({to, subject});
-  }
-}
-
-// All compatible - no registration needed!
-factory.setOne(EmailService, new MockEmailService());
-const service: IEmailService = factory.create(EmailService)();
-// TypeScript is happy because MockEmailService is structurally compatible
-```
-
-### Object ID Tracking
-
-**Use Case:** Your methods pass around complex objects that are hard to serialize in specifications.
-
-**Solution:** Register objects with IDs to show clean references instead of verbose dumps.
-
-```typescript
-const factory = new ObjectFactory();
-
-// Complex configuration object
-const dbConfig = {
-  host: 'localhost',
-  port: 5432,
-  database: 'testdb',
-  credentials: { /* ... */ }
-};
-
-// Register with ID
-factory.register(dbConfig, 'testDbConfig');
-
-// Later retrieve by ID
-const config = factory.getRegistered<DatabaseConfig>('testDbConfig');
-
-// Auto-generate IDs if not provided
-const obj1 = { value: 1 };
-const id = factory.register(obj1); // Returns 'auto_1'
-```
-
-### Constructor Parameter Tracking
-
-**Use Case:** You need to verify what parameters were passed to constructors during object creation.
-
-**Solution:** Implement `IConstructorCalledWith` interface to receive parameter information.
-
-```typescript
-import { IConstructorCalledWith, ConstructorParameterInfo } from 'specrec-ts';
-
-class TrackedService implements IConstructorCalledWith {
-  private params?: ConstructorParameterInfo[];
-
-  constructor(
-    public config: string,
-    public port: number,
-    public options?: ServiceOptions
-  ) {}
-
-  constructorCalledWith(params: ConstructorParameterInfo[]): void {
-    this.params = params;
-    // params[0] = { index: 0, type: 'string', value: 'localhost' }
-    // params[1] = { index: 1, type: 'number', value: 8080 }
-    // params[2] = { index: 2, type: 'object', value: {...} }
-  }
-}
-
-const service = factory.create(TrackedService)('localhost', 8080, { timeout: 5000 });
-// constructorCalledWith is automatically called with parameter details
-```
-
-### Clear Operations
-
-**Use Case:** You need to reset factory state between tests to ensure test isolation.
-
-**Solution:** Use `clear()` for specific types or `clearAll()` for complete reset.
-
-```typescript
-// Clear specific type
-factory.clear(EmailService);
-
-// Clear all registrations
-factory.clearAll();
-
-// Global singleton cleanup
-import { clearAll } from 'specrec-ts';
-clearAll(); // Clears the global instance
-```
-
-### Global Instance Pattern
-
-**Use Case:** You want to use ObjectFactory throughout your codebase without passing instances.
-
-**Solution:** Use the global singleton with convenient exports.
+Use the global singleton for convenience:
 
 ```typescript
 import { create, setOne, setAlways, clearAll } from 'specrec-ts';
@@ -297,45 +174,52 @@ afterEach(() => {
 });
 ```
 
-## Advanced Features
+### Constructor Parameter Tracking
 
-### Type Safety
-
-TypeScript provides full type safety and IntelliSense:
+Implement `IConstructorCalledWith` to receive parameter information:
 
 ```typescript
-class UserService {
+import { IConstructorCalledWith, ConstructorParameterInfo } from 'specrec-ts';
+
+class TrackedService implements IConstructorCalledWith {
   constructor(
-    private name: string,
-    private age: number,
-    private admin: boolean
+    public config: string,
+    public port: number
   ) {}
-}
 
-// TypeScript enforces correct parameter types
-const service = create(UserService)("John", 30, true); // ✅ Correct
-
-// Type errors are caught at compile time
-const service2 = create(UserService)(30, "John", true); // ❌ Type error
-const service3 = create(UserService)("John"); // ❌ Missing parameters
-```
-
-### Working with Async Constructors
-
-While JavaScript doesn't support async constructors directly, you can work with factory patterns:
-
-```typescript
-class AsyncService {
-  private constructor(private data: any) {}
-
-  static async create(url: string): Promise<AsyncService> {
-    const data = await fetch(url).then(r => r.json());
-    return new AsyncService(data);
+  constructorCalledWith(params: ConstructorParameterInfo[]): void {
+    // params[0] = { index: 0, type: 'string', value: 'localhost' }
+    // params[1] = { index: 1, type: 'number', value: 8080 }
   }
 }
 
-// Use with factory
-const servicePromise = AsyncService.create('https://api.example.com');
+const service = create(TrackedService)('localhost', 8080);
+// constructorCalledWith is automatically called with parameter details
+```
+
+### Object Registration
+
+Register objects with IDs for clean test specifications:
+
+```typescript
+const factory = new ObjectFactory();
+
+// Complex configuration object
+const dbConfig = {
+  host: 'localhost',
+  port: 5432,
+  database: 'testdb'
+};
+
+// Register with ID
+factory.register(dbConfig, 'testDbConfig');
+
+// Later retrieve by ID
+const config = factory.getRegistered<DatabaseConfig>('testDbConfig');
+
+// Auto-generate IDs if not provided
+const obj1 = { value: 1 };
+const id = factory.register(obj1); // Returns 'auto_1'
 ```
 
 ## Migration Examples
@@ -349,7 +233,6 @@ class OrderProcessor {
     const order = db.getOrder(orderId);
 
     if (order.status === 'pending') {
-      // Process order
       emailService.sendConfirmation(order.customerEmail);
     }
   }
@@ -367,7 +250,6 @@ class OrderProcessor {
     const order = db.getOrder(orderId);
 
     if (order.status === 'pending') {
-      // Process order
       emailService.sendConfirmation(order.customerEmail);
     }
   }
