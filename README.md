@@ -1,3 +1,35 @@
+# ⚠️ DEPRECATED: This package has been renamed to `objectfactory`
+
+> **This package is no longer maintained. Please migrate to the new package:**
+>
+> **New Package:** [`objectfactory`](https://www.npmjs.com/package/objectfactory)
+> **Repository:** [https://github.com/devill/objectfactory-ts](https://github.com/devill/objectfactory-ts)
+>
+> ### Migration Instructions
+>
+> 1. **Uninstall this package:**
+>    ```bash
+>    npm uninstall specrec-ts
+>    ```
+>
+> 2. **Install the new package:**
+>    ```bash
+>    npm install objectfactory
+>    ```
+>
+> 3. **Update your imports:**
+>    ```typescript
+>    // Old
+>    import { ObjectFactory, create } from 'specrec-ts';
+>
+>    // New
+>    import { ObjectFactory, create } from 'objectfactory';
+>    ```
+>
+> The API remains the same, so no other code changes are required.
+
+---
+
 # SpecRec for TypeScript
 
 **Turn untestable legacy code into comprehensive test suites in minutes**

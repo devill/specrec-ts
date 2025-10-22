@@ -1,20 +1,22 @@
 {
   "name": "specrec-ts",
-  "version": "1.0.1",
-  "description": "Turn untestable legacy code into comprehensive test suites in minutes - TypeScript implementation of SpecRec",
+  "version": "2.0.0",
+  "description": "[DEPRECATED] Use 'objectfactory' instead. Turn untestable legacy code into comprehensive test suites in minutes - TypeScript implementation of SpecRec",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist/**/*",
     "README.md",
-    "LICENSE.md"
+    "LICENSE.md",
+    "postinstall.js"
   ],
   "scripts": {
     "build": "tsc",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && npm test",
+    "postinstall": "node postinstall.js"
   },
   "keywords": [
     "testing",
