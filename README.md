@@ -1,9 +1,9 @@
-# ⚠️ DEPRECATED: This package has been renamed to `objectfactory`
+# ⚠️ DEPRECATED: This package has been renamed to `global-object-factory`
 
 > **This package is no longer maintained. Please migrate to the new package:**
 >
-> **New Package:** [`objectfactory`](https://www.npmjs.com/package/objectfactory)
-> **Repository:** [https://github.com/devill/objectfactory-ts](https://github.com/devill/objectfactory-ts)
+> **New Package:** [`global-object-factory`](https://www.npmjs.com/package/global-object-factory)
+> **Repository:** [https://github.com/devill/global-object-factory-ts](https://github.com/devill/global-object-factory-ts)
 >
 > ### Migration Instructions
 >
@@ -14,7 +14,7 @@
 >
 > 2. **Install the new package:**
 >    ```bash
->    npm install objectfactory
+>    npm install global-object-factory
 >    ```
 >
 > 3. **Update your imports:**
@@ -23,7 +23,7 @@
 >    import { ObjectFactory, create } from 'specrec-ts';
 >
 >    // New
->    import { ObjectFactory, create } from 'objectfactory';
+>    import { ObjectFactory, create } from 'global-object-factory';
 >    ```
 >
 > The API remains the same, so no other code changes are required.
