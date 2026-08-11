@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24.x
+          cache: npm
+      # node_modules is committed to this repo AND listed in .gitignore, so the
+      # checked-out copy is incomplete and fails the tests. npm ci replaces it
+      # wholesale from the lockfile, which is what makes the run trustworthy.
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
