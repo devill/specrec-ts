@@ -9,6 +9,14 @@ updates:
       all-deps:
         patterns: ["*"]
         update-types: ["minor", "patch", "major"]
+    # ts-jest declares peer typescript ">=4.3 <7" and 29.4.12 is its latest
+    # release, so no ts-jest supports TypeScript 7 yet. A major typescript bump
+    # makes "npm ci" fail with ERESOLVE, which blocked PR #3. Patch and minor
+    # typescript updates still come through. Drop this ignore once ts-jest
+    # supports TypeScript 7.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
